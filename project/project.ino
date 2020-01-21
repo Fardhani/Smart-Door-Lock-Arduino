@@ -13,7 +13,7 @@
 
 /*
  * Relay
- * D0
+ * D8
  */
 
 #include <SPI.h>
@@ -21,30 +21,33 @@
 
 constexpr uint8_t RST_PIN = D1;     // Configurable, see typical pin layout above
 constexpr uint8_t SS_PIN = D2;      // Configurable, see typical pin layout above
-constexpr uint8_t RELAY = D0;       // Configurable, see typical pin layout above
+constexpr uint8_t RELAY = D8;       // Configurable, see typical pin layout above
+constexpr uint8_t DOOR_SWITCH = D0;       // Configurable, see typical pin layout above
  
 MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
 
-MFRC522::MIFARE_Key key; 
 
 // Init array that will store new NUID 
 byte nuidPICC[4];
 //condition lock door
 boolean isLocked = true;
+boolean isClosed = true;
 
 void setup() { 
+  pinMode(DOOR_SWITCH, OUTPUT);
   pinMode(RELAY, OUTPUT); //initialize relay
   Serial.begin(9600);
   SPI.begin(); // Init SPI bus
   rfid.PCD_Init(); // Init MFRC522 
 
   for (byte i = 0; i < 6; i++) {
-    key.keyByte[i] = 0xFF;
+    rfid.uid.uidByte[i] = 0xFF;
   }
 
   Serial.println(F("This code scan the MIFARE Classsic NUID."));
   Serial.print(F("Using the following key:"));
-  printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
+  printHex(rfid.uid.uidByte, rfid.uid.size);
+  digitalWrite(DOOR_SWITCH, HIGH);
 }
  
 void loop() {
@@ -56,6 +59,14 @@ void loop() {
   else{
     digitalWrite(RELAY, HIGH);
   }
+
+  if(digitalRead(DOOR_SWITCH) == HIGH){
+    isClosed = false;
+  }
+  else{
+    isClosed = true;
+  }
+  Serial.println(isClosed);
 
   // Look for new cards
   if ( ! rfid.PICC_IsNewCardPresent())
