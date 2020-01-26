@@ -51,7 +51,7 @@ FirebaseData firebaseData;
 boolean isLocked = true;
 boolean isClosed = true;
 boolean isSecurityMode = true;
-String storedUid[2] = {"b6 76 ba f7", ""};
+String storedUid[2] = {" b6 76 ba f7", ""};
 String readUid = "";
 
 void setup() {
@@ -150,8 +150,6 @@ void loop() {
       readUid = "";
       for (byte i = 0; i < rfid.uid.size; i++)
       {
-        Serial.print(rfid.uid.uidByte[i] < 0x10 ? " 0" : " ");
-        Serial.print(rfid.uid.uidByte[i], HEX);
         readUid.concat(String(rfid.uid.uidByte[i] < 0x10 ? " 0" : " "));
         readUid.concat(String(rfid.uid.uidByte[i], HEX));
       }
@@ -171,6 +169,17 @@ void loop() {
         /*
            2. push to firebase in activity
         */
+      }
+      else{
+        isLocked = true;
+        if (Firebase.setBool(firebaseData, "/security_status/locked", isLocked))
+        {
+          Serial.println("PASSED");
+        }
+        else
+        {
+          Serial.println(firebaseData.errorReason());
+        }
       }
 
       // Halt PICC
